@@ -1,6 +1,7 @@
 package org.conreality.sdk
 
 import java.sql.SQLException
+import java.sql.Types
 
 /**
  * A transactional action to mutate Conreality master state.
@@ -41,5 +42,18 @@ class Action(val session: Session) : AutoCloseable {
   fun commit() {
     connection.commit()
     connection.close()
+  }
+
+  /**
+   * Sends a message.
+   */
+  @Throws(SQLException::class) // TODO: wrap exception
+  fun sendMessage(messageText: String): Message {
+    connection.prepareCall("{?= call conreality.message_send(?)}").use { statement ->
+      statement.registerOutParameter(1, Types.BIGINT)
+      statement.setString(2, messageText)
+      statement.execute()
+      return Message(session, statement.getLong(1))
+    }
   }
 }
