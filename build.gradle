@@ -21,4 +21,5 @@ repositories {
 dependencies {
   compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compile "org.postgresql:postgresql:42.1.4"
+  compile "com.zaxxer:HikariCP:2.6.3"
 }
