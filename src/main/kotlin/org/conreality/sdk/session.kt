@@ -34,6 +34,7 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") : 
     connectionPool.setJdbcUrl(client.connectionURL)
     connectionPool.setUsername(agentUUID.toString())
     connectionPool.setPassword(password)
+    connectionPool.setAutoCommit(false)
   }
 
   /**
