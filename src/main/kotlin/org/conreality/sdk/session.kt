@@ -1,6 +1,7 @@
 package org.conreality.sdk
 
 import java.sql.Connection
+import java.sql.SQLException
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
@@ -16,7 +17,7 @@ private val ID = AtomicLong()
  * @property agentUUID
  * @property password
  */
-class Session(val client: Client, val agentUUID: UUID, password: String = "") {
+class Session(val client: Client, val agentUUID: UUID, password: String = "") : AutoCloseable {
   val id = ID.incrementAndGet()
 
   private val connectionPool = HikariDataSource()
@@ -36,15 +37,28 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") {
   }
 
   /**
+   * This method is idempotent.
+   */
+  @Throws(Exception::class)
+  override fun close() {
+    if (!isClosed) {
+      connectionPool.close()
+    }
+  }
+
+  /**
    * @suppress
    */
+  @Throws(SQLException::class) // TODO: wrap exception
   fun getConnection(): Connection {
+    // TODO: throw exception if isClosed == true
     return connectionPool.getConnection()
   }
 
   /**
    * @suppress
    */
+  @Throws(SQLException::class) // TODO: wrap exception
   fun execute(sqlCommand: String) {
     val connection = connectionPool.getConnection()
     connection.use {
