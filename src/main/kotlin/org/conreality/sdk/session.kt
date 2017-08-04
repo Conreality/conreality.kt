@@ -47,7 +47,11 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") {
    */
   fun execute(sqlCommand: String) {
     val connection = connectionPool.getConnection()
-    val statement = connection.createStatement()
-    statement.execute(sqlCommand)
+    connection.use {
+      val statement = connection.createStatement()
+      statement.use {
+        statement.execute(sqlCommand)
+      }
+    }
   }
 }
