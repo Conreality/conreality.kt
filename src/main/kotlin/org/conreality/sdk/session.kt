@@ -59,10 +59,17 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") : 
   }
 
   /**
+   * Executes an action.
+   */
+  fun <T> execute(body: (Action) -> T): T {
+    return body(Action(this))
+  }
+
+  /**
    * @suppress
    */
   @Throws(SQLException::class) // TODO: wrap exception
-  fun execute(sqlCommand: String) {
+  fun executeSQL(sqlCommand: String) {
     val connection = connectionPool.getConnection()
     connection.use {
       val statement = connection.createStatement()
