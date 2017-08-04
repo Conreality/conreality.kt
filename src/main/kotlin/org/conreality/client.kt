@@ -8,11 +8,18 @@ import java.sql.DriverManager
 import org.postgresql.jdbc.*
 
 class Client(dbName: String) {
-  var connection: Connection
+  private val connection: Connection
+
+  val isClosed get() = connection.isClosed
 
   init {
     Class.forName("org.postgresql.Driver").newInstance()
 
     connection = DriverManager.getConnection("jdbc:postgresql:" + dbName)
+  }
+
+  fun execute(sqlCommand: String) {
+    val statement = connection.createStatement()
+    statement.execute(sqlCommand)
   }
 }
