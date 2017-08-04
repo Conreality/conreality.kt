@@ -45,6 +45,21 @@ class Action(val session: Session) : AutoCloseable {
   }
 
   /**
+   * Sends an event.
+   */
+  @Throws(SQLException::class) // TODO: wrap exception
+  fun sendEvent(predicate: String, subject: Object, `object`: Object): Event {
+    connection.prepareCall("{?= call conreality.event_send(?, ?, ?)}").use { statement ->
+      statement.registerOutParameter(1, Types.BIGINT)
+      statement.setString(2, predicate)
+      statement.setString(3, subject.uuid.toString())
+      statement.setString(4, `object`.uuid.toString())
+      statement.execute()
+      return Event(session, statement.getLong(1))
+    }
+  }
+
+  /**
    * Sends a message.
    */
   @Throws(SQLException::class) // TODO: wrap exception
