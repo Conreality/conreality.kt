@@ -18,9 +18,11 @@ private val ID = AtomicLong()
  * @property password
  */
 class Session(val client: Client, val agentUUID: UUID, password: String = "") : AutoCloseable {
+  private val connectionPool = HikariDataSource()
+
   val id = ID.incrementAndGet()
 
-  private val connectionPool = HikariDataSource()
+  val agent get() = Object(this, agentUUID)
 
   val isClosed get() = connectionPool.isClosed
 
