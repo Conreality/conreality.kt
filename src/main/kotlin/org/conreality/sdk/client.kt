@@ -3,18 +3,20 @@
 
 package org.conreality.sdk
 
-import java.util.UUID
 import java.sql.Connection
 import java.sql.DriverManager
+import java.util.UUID
 
-import com.zaxxer.hikari.HikariDataSource
-
-class Client(gameID: String) {
-  private val connectionPool = HikariDataSource()
+class Client(val gameID: String) {
+  val connectionURL: String
 
   init {
     Class.forName("org.postgresql.Driver").newInstance()
-    connectionPool.setJdbcUrl("jdbc:postgresql:" + gameID)
+    connectionURL = "jdbc:postgresql:" + gameID
+  }
+
+  fun login(): Session {
+    return login("public")
   }
 
   fun login(agentID: String, password: String = ""): Session {
@@ -23,13 +25,6 @@ class Client(gameID: String) {
   }
 
   fun login(agentUUID: UUID, password: String = ""): Session {
-    val connection = connectionPool.getConnection(agentUUID.toString(), password)
-    return Session(connection, agentUUID)
-  }
-
-  fun execute(sqlCommand: String) {
-    val connection = connectionPool.getConnection()
-    val statement = connection.createStatement()
-    statement.execute(sqlCommand)
+    return Session(this, agentUUID, password)
   }
 }
