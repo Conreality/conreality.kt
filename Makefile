@@ -3,7 +3,7 @@ SH = bash
 PACKAGE := conreality
 VERSION := $(shell cat VERSION)
 
-SOURCES := $(wildcard src/*/*/*/*/*.kt)
+SOURCES := $(wildcard src/*/*/*/*/*/*.kt)
 OUTPUTS := build/libs/conreality.kt.jar
 
 all: build

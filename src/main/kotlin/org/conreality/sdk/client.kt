@@ -1,7 +1,7 @@
 @file:JvmName("SDK")
 @file:JvmMultifileClass
 
-package org.conreality
+package org.conreality.sdk
 
 import java.sql.Connection
 import java.sql.DriverManager
