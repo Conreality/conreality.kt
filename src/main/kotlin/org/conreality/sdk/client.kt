@@ -1,6 +1,3 @@
-@file:JvmName("SDK")
-@file:JvmMultifileClass
-
 package org.conreality.sdk
 
 import java.sql.Connection
