@@ -38,6 +38,13 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") {
   /**
    * @suppress
    */
+  fun getConnection(): Connection {
+    return connectionPool.getConnection()
+  }
+
+  /**
+   * @suppress
+   */
   fun execute(sqlCommand: String) {
     val connection = connectionPool.getConnection()
     val statement = connection.createStatement()
