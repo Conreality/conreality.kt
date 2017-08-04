@@ -4,4 +4,9 @@ package org.conreality.sdk
 
 import java.util.UUID
 
-class Object(val session: Session, val uuid: UUID) {}
+data class Object(val session: Session, val uuid: UUID) {
+  val location: Location?
+    get() {
+      return null // TODO
+    }
+}
