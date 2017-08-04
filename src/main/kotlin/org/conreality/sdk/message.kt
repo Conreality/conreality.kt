@@ -3,4 +3,4 @@
 
 package org.conreality.sdk
 
-class Message(val client: Client, val id: Long) {}
+class Message(val session: Session, val id: Long) {}
