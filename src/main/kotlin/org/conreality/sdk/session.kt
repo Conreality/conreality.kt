@@ -54,10 +54,15 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") : 
   /**
    * @suppress
    */
-  @Throws(SQLException::class) // TODO: wrap exception
+  @Throws(ConnectionException::class)
   fun getConnection(): Connection {
-    // TODO: throw exception if isClosed == true
-    return connectionPool.getConnection()
+    // TODO: throw logic exception if isClosed == true ?
+    try {
+      return connectionPool.getConnection()
+    }
+    catch (error: SQLException) {
+      throw ConnectionException(error)
+    }
   }
 
   /**
@@ -70,7 +75,6 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") : 
   /**
    * @suppress
    */
-  @Throws(SQLException::class) // TODO: wrap exception
   fun executeSQL(sqlCommand: String) {
     val connection = connectionPool.getConnection()
     connection.use {

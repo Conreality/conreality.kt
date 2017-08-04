@@ -21,7 +21,7 @@ class Action(val session: Session) : AutoCloseable {
   /**
    * This method is idempotent.
    */
-  @Throws(SQLException::class) // TODO: wrap exception
+  @Throws(TransactionException::class)
   override fun close() {
     if (!isClosed) {
       commit()
@@ -31,46 +31,66 @@ class Action(val session: Session) : AutoCloseable {
   /**
    * Aborts this action.
    */
-  @Throws(SQLException::class) // TODO: wrap exception
+  @Throws(TransactionException::class)
   fun abort() {
-    connection.rollback()
-    connection.close()
+    try {
+      connection.rollback()
+      connection.close()
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
+    }
   }
 
   /**
    * Commits this action.
    */
-  @Throws(SQLException::class) // TODO: wrap exception
+  @Throws(TransactionException::class)
   fun commit() {
-    connection.commit()
-    connection.close()
+    try {
+      connection.commit()
+      connection.close()
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
+    }
   }
 
   /**
    * Sends an event.
    */
-  @Throws(SQLException::class) // TODO: wrap exception
+  @Throws(TransactionException::class)
   fun sendEvent(predicate: String, subject: Object, `object`: Object): Event {
-    connection.prepareCall("{?= call conreality.event_send(?, ?, ?)}").use { statement ->
-      statement.registerOutParameter(1, Types.BIGINT)
-      statement.setString(2, predicate)
-      statement.setString(3, subject.uuid.toString())
-      statement.setString(4, `object`.uuid.toString())
-      statement.execute()
-      return Event(session, statement.getLong(1))
+    try {
+      connection.prepareCall("{?= call conreality.event_send(?, ?, ?)}").use { statement ->
+        statement.registerOutParameter(1, Types.BIGINT)
+        statement.setString(2, predicate)
+        statement.setString(3, subject.uuid.toString())
+        statement.setString(4, `object`.uuid.toString())
+        statement.execute()
+        return Event(session, statement.getLong(1))
+      }
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
     }
   }
 
   /**
    * Sends a message.
    */
-  @Throws(SQLException::class) // TODO: wrap exception
+  @Throws(TransactionException::class)
   fun sendMessage(messageText: String): Message {
-    connection.prepareCall("{?= call conreality.message_send(?)}").use { statement ->
-      statement.registerOutParameter(1, Types.BIGINT)
-      statement.setString(2, messageText)
-      statement.execute()
-      return Message(session, statement.getLong(1))
+    try {
+      connection.prepareCall("{?= call conreality.message_send(?)}").use { statement ->
+        statement.registerOutParameter(1, Types.BIGINT)
+        statement.setString(2, messageText)
+        statement.execute()
+        return Message(session, statement.getLong(1))
+      }
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
     }
   }
 }
