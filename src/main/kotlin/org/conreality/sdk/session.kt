@@ -8,6 +8,14 @@ import com.zaxxer.hikari.HikariDataSource
 
 private val ID = AtomicLong()
 
+/**
+ * An authenticated session with a Conreality master.
+ *
+ * @constructor
+ * @property client
+ * @property agentUUID
+ * @property password
+ */
 class Session(val client: Client, val agentUUID: UUID, password: String = "") {
   val id = ID.incrementAndGet()
   private val connectionPool = HikariDataSource()
@@ -21,6 +29,9 @@ class Session(val client: Client, val agentUUID: UUID, password: String = "") {
     connectionPool.setPassword(password)
   }
 
+  /**
+   * @suppress
+   */
   fun execute(sqlCommand: String) {
     val connection = connectionPool.getConnection()
     val statement = connection.createStatement()
