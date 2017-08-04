@@ -2,8 +2,11 @@
 
 package org.conreality.sdk
 
+import java.io.InputStream
 import java.sql.SQLException
 import java.sql.Types
+
+import org.postgresql.PGConnection
 
 /**
  * A transactional action to mutate Conreality master state.
@@ -77,7 +80,7 @@ class Action(val session: Session) : AutoCloseable {
   }
 
   /**
-   * Sends a message.
+   * Sends a text message.
    */
   @Throws(TransactionException::class)
   fun sendMessage(messageText: String): Message {
@@ -85,6 +88,32 @@ class Action(val session: Session) : AutoCloseable {
       connection.prepareCall("{?= call conreality.message_send(?)}").use { statement ->
         statement.registerOutParameter(1, Types.BIGINT)
         statement.setString(2, messageText)
+        statement.execute()
+        return Message(session, statement.getLong(1))
+      }
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
+    }
+  }
+
+  /**
+   * Sends an audio message.
+   */
+  @Throws(TransactionException::class)
+  fun sendAudioMessage(messageData: ByteArray): Message {
+    return sendAudioMessage(messageData.inputStream())
+  }
+
+  /**
+   * Sends an audio message.
+   */
+  @Throws(TransactionException::class)
+  fun sendAudioMessage(messageStream: InputStream): Message {
+    try {
+      connection.prepareCall("{?= call conreality.message_send(?)}").use { statement -> // FIXME
+        statement.registerOutParameter(1, Types.BIGINT)
+        statement.setBinaryStream(2, messageStream)
         statement.execute()
         return Message(session, statement.getLong(1))
       }
