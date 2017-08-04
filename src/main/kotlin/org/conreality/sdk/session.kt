@@ -18,9 +18,15 @@ private val ID = AtomicLong()
  */
 class Session(val client: Client, val agentUUID: UUID, password: String = "") {
   val id = ID.incrementAndGet()
+
   private val connectionPool = HikariDataSource()
 
   val isClosed get() = connectionPool.isClosed
+
+  /**
+   * The game this session belongs to.
+   */
+  val game = Game(this)
 
   init {
     connectionPool.setPoolName("org.conreality.sdk.Session:" + id)
