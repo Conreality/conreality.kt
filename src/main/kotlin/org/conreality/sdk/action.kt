@@ -135,4 +135,30 @@ class Action(val session: Session) : AutoCloseable {
       throw TransactionException(error)
     }
   }
+
+  /**
+   * Reports the agent's current location.
+   */
+  @Throws(TransactionException::class)
+  fun reportLocation(location: Location) {
+    try {
+      // TODO
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
+    }
+  }
+
+  /**
+   * Reports the agent's current motion.
+   */
+  @Throws(TransactionException::class)
+  fun reportMotion() {
+    try {
+      // TODO
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
+    }
+  }
 }
