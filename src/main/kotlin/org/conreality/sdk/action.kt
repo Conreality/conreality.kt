@@ -6,8 +6,6 @@ import java.io.InputStream
 import java.sql.SQLException
 import java.sql.Types
 
-import org.postgresql.PGConnection
-
 /**
  * A transactional action to mutate Conreality master state.
  *
@@ -15,7 +13,7 @@ import org.postgresql.PGConnection
  * @property session the current session
  */
 class Action(val session: Session) : AutoCloseable {
-  private val connection = session.getConnection()
+  val connection = session.getConnection()
 
   val isPending get() = !isClosed
 
@@ -111,11 +109,26 @@ class Action(val session: Session) : AutoCloseable {
   @Throws(TransactionException::class)
   fun sendAudioMessage(messageStream: InputStream): Message {
     try {
-      connection.prepareCall("{?= call conreality.message_send(?)}").use { statement -> // FIXME
+      connection.prepareCall("{?= call conreality.message_send(?::bytea)}").use { statement ->
         statement.registerOutParameter(1, Types.BIGINT)
         statement.setBinaryStream(2, messageStream)
         statement.execute()
         return Message(session, statement.getLong(1))
+      }
+    }
+    catch (error: SQLException) {
+      throw TransactionException(error)
+    }
+  }
+
+  /**
+   * Begins streaming an audio message.
+   */
+  @Throws(TransactionException::class)
+  fun beginAudioMessage(): BinaryOutputStream<Message> {
+    try {
+      return BinaryOutputStream(this) { binary: Binary ->
+        Message(session, binary.id) // FIXME: message ID instead of binary ID
       }
     }
     catch (error: SQLException) {

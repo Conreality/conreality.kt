@@ -5,8 +5,11 @@ package org.conreality.sdk
 import java.io.IOException
 import java.io.OutputStream
 import java.sql.SQLException
+import java.sql.Types
 
+import org.postgresql.PGConnection
 import org.postgresql.largeobject.LargeObject
+import org.postgresql.largeobject.LargeObjectManager
 
 /**
  * @constructor
@@ -16,13 +19,17 @@ import org.postgresql.largeobject.LargeObject
  * @see http://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html
  * @eee https://jdbc.postgresql.org/documentation/publicapi/org/postgresql/largeobject/LargeObject.html
  */
-class LargeObjectOutputStream(val lo: LargeObject, val callback: (LargeObject) -> Unit) : OutputStream() {
+open class LargeObjectOutputStream(val action: Action) : OutputStream() {
+  //assert(connection.isWrapperFor(PGConnection::class.java))
+  val connection = action.connection
+  val manager = connection.unwrap(PGConnection::class.java).getLargeObjectAPI()
+  val oid = manager.createLO(LargeObjectManager.WRITE)
+  val lo = manager.open(oid, LargeObjectManager.WRITE)
 
   @Throws(IOException::class)
   override fun close() {
     try {
       lo.close()
-      callback(lo)
     }
     catch (error: SQLException) {
       throw IOException(error)
@@ -61,6 +68,27 @@ class LargeObjectOutputStream(val lo: LargeObject, val callback: (LargeObject) -
     }
     catch (error: SQLException) {
       throw IOException(error)
+    }
+  }
+}
+
+class BinaryOutputStream<T>(action: Action, val callback: (Binary) -> T) : LargeObjectOutputStream(action) {
+
+  @Throws(IOException::class)
+  fun finish(): T {
+    try {
+      var binaryID = 0L
+      connection.prepareCall("{?= call conreality.binary_import(?::oid)}").use { statement ->
+        statement.registerOutParameter(1, Types.BIGINT)
+        statement.setLong(2, oid)
+        statement.execute()
+        binaryID = statement.getLong(1)
+      }
+      assert(binaryID != 0L)
+      return callback(Binary(action.session, binaryID))
+    }
+    finally {
+      manager.delete(oid)
     }
   }
 }
