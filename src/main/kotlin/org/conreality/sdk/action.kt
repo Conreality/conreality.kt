@@ -13,6 +13,9 @@ import java.sql.Types
  * @property session the current session
  */
 class Action(val session: Session) : AutoCloseable {
+  /**
+   * @suppress
+   */
   val connection = session.getConnection()
 
   val isPending get() = !isClosed
@@ -140,9 +143,21 @@ class Action(val session: Session) : AutoCloseable {
    * Reports the agent's current location.
    */
   @Throws(TransactionException::class)
-  fun reportLocation(location: Location) {
+  fun reportLocation(location: Location, accuracy: Double? = null) {
     try {
-      // TODO
+      connection.prepareCall("{?= call conreality.motion_report(conreality.point_gps(?, ?), ?::real)}").use { statement ->
+        statement.registerOutParameter(1, Types.OTHER)
+        statement.setDouble(2, location.longitude)
+        statement.setDouble(3, location.latitude)
+        if (accuracy === null) {
+          statement.setNull(4, Types.REAL)
+        }
+        else {
+          statement.setDouble(4, accuracy)
+        }
+        statement.execute()
+        statement.getObject(1) /* ignored, for now */
+      }
     }
     catch (error: SQLException) {
       throw TransactionException(error)
